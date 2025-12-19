@@ -37,6 +37,7 @@ This project was built as part of the **Finz Internship Task**.
 
 ## Project Structure
 
+```
 finz-cashflow-qa/
 ├── app/
 │ ├── main.py # FastAPI app + UI
