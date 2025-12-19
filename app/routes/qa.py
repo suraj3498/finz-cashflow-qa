@@ -6,25 +6,43 @@ from app.gemini_qa import answer_question_with_gemini
 
 router = APIRouter(prefix="/qa", tags=["Gemini QA"])
 
+
+# ---------- Helpers ----------
+
 def format_k(x: float) -> str:
     return f"{int(x / 1000)}k" if x >= 1000 else str(int(x))
 
-def is_deterministic_question(question: str) -> bool:
+
+def get_question_intent(question: str) -> str:
+    """
+    Classify user question into a supported financial intent
+    """
     q = question.lower()
-    keywords = [
-        "total outflow",
-        "total outflows",
-        "largest category",
-        "how much",
-        "amount",
-        "spend",
-    ]
-    return any(k in q for k in keywords)
+
+    if "total outflow" in q or "total outflows" in q:
+        return "TOTAL_OUTFLOWS"
+
+    if "total inflow" in q or "total inflows" in q:
+        return "TOTAL_INFLOWS"
+
+    if "net cash" in q or "net cashflow" in q:
+        return "NET_CASH"
+
+    if "largest category" in q or "highest category" in q:
+        return "LARGEST_CATEGORY"
+
+    if "top vendor" in q or "top vendors" in q:
+        return "TOP_VENDORS"
+
+    return "UNKNOWN"
+
+
+# ---------- API ----------
 
 @router.post("")
 def qa_endpoint(payload: Dict[str, Any]):
     """
-    Financial Q&A with deterministic math + optional Gemini
+    Financial Q&A with deterministic computation + optional Gemini fallback
     """
 
     try:
@@ -39,31 +57,48 @@ def qa_endpoint(payload: Dict[str, Any]):
             end_date=end_date,
         )
 
-        # ✅ SAFE access (NO KeyError)
         totals = summary.get("totals", {})
-        total_outflows = totals.get("outflows", 0)
+        intent = get_question_intent(question)
 
-        largest_category = summary.get("largest_category", "UNKNOWN")
-        largest_amount = summary.get("largest_category_amount", 0)
+        # ---------- Deterministic answers ----------
 
-        deterministic_answer = (
-            f"Your total outflows were {format_k(total_outflows)}. "
-            f"Largest category was {largest_category} "
-            f"at {format_k(largest_amount)}."
-        )
+        if intent == "TOTAL_OUTFLOWS":
+            answer = f"Your total outflows were {format_k(totals.get('outflows', 0))}."
 
-        # 🚀 FAST PATH (no Gemini → no latency)
-        if is_deterministic_question(question):
-            return {"answer": deterministic_answer}
+        elif intent == "TOTAL_INFLOWS":
+            answer = f"Your total inflows were {format_k(totals.get('inflows', 0))}."
 
-        # 🤖 Gemini only for non-deterministic questions
-        answer = answer_question_with_gemini(
-            question=question,
-            context=deterministic_answer,
-        )
+        elif intent == "NET_CASH":
+            answer = f"Your net cashflow was {format_k(totals.get('net_cash', 0))}."
+
+        elif intent == "LARGEST_CATEGORY":
+            category = summary.get("largest_category", "UNKNOWN")
+            amount = summary.get("largest_category_amount", 0)
+            answer = (
+                f"Your largest expense category was {category} "
+                f"at {format_k(amount)}."
+            )
+
+        elif intent == "TOP_VENDORS":
+            vendors = summary.get("top_vendors", [])[:3]
+            if not vendors:
+                answer = "No vendor spending found for this period."
+            else:
+                vendor_text = ", ".join(
+                    f"{v['vendor']} ({format_k(v['amount'])})"
+                    for v in vendors
+                )
+                answer = f"Your top vendors were {vendor_text}."
+
+        else:
+            # ---------- Gemini fallback ----------
+            answer = answer_question_with_gemini(
+                question=question,
+                context=summary,
+            )
 
         return {"answer": answer}
 
     except Exception as e:
-        # ✅ ALWAYS return JSON (never plain text)
+        # Always return JSON
         raise HTTPException(status_code=500, detail=str(e))
