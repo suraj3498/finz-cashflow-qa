@@ -37,17 +37,21 @@ This project was built as part of the **Finz Internship Task**.
 
 ## Project Structure
 
-app/
-├── main.py # FastAPI app + UI
-├── summary.py # Cashflow aggregation logic
-├── gemini_qa.py # Gemini integration (optional)
-├── routes/
-│ └── qa.py # /qa API endpoint
-├── db/
-│ └── init.py # MongoDB connection
-├── static/
+finz-cashflow-qa/
+├── app/
+│ ├── main.py # FastAPI app + UI
+│ ├── summary.py # Cashflow aggregation logic
+│ ├── gemini_qa.py # Gemini integration (optional)
+│ ├── routes/
+│ │ └── qa.py # /qa API endpoint
+│ ├── db/
+│ │ └── init.py # MongoDB connection
+│ └── static/
 │ └── finz_logo.jpeg # Logo for UI
-.env
+├── .env.example # Environment variable template
+├── README.md # Project documentation
+├── requirements.txt # Python dependencies
+└── .gitignore
 
 ---
 
