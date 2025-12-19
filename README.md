@@ -38,21 +38,41 @@ This project was built as part of the **Finz Internship Task**.
 ## Project Structure
 
 ```
-finz-cashflow-qa/
+finz-internship-task/
 ├── app/
 │ ├── main.py # FastAPI app + UI
+│ ├── qa.py # Q&A orchestration logic
 │ ├── summary.py # Cashflow aggregation logic
+│ ├── normalize.py # Transaction normalization
+│ ├── rules.py # Cashflow categorization rules
+│ ├── schemas.py # Pydantic schemas
+│ ├── ingest.py # Data ingestion helpers
+│ ├── cashflow.py # Cashflow utilities
 │ ├── gemini_qa.py # Gemini integration (optional)
+│ ├── config.py # App configuration
+│ ├── db.py # MongoDB connection
 │ ├── routes/
 │ │ └── qa.py # /qa API endpoint
-│ ├── db/
-│ │ └── init.py # MongoDB connection
-│ └── static/
-│ └── finz_logo.jpeg # Logo for UI
+│ ├── services/ # Business logic services
+│ ├── static/
+│ │ └── finz_logo.jpeg # Logo for UI
+│ └── init.py
+│
+├── scripts/
+│ └── ingest_csv.py # CSV ingestion script
+│
+├── Raw Data/
+│ ├── The Winslow_Checking.csv
+│ └── Winslow cc_Credit_card.csv
+│
+├── Normalized Data (Only for verification)/
+│ └── Bank Transactions - Fully Categorized.csv
+│
+├── .env # Local environment variables (ignored)
 ├── .env.example # Environment variable template
-├── README.md # Project documentation
-├── requirements.txt # Python dependencies
-└── .gitignore
+├── .gitignore
+├── requirements.txt
+└── README.md
 
 ---
 
